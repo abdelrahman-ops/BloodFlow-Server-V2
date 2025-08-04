@@ -53,6 +53,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date() });
+});
+
 // Root route - Show API information
 app.get('/', (req, res) => {
     res.status(200).send(`
@@ -137,9 +141,3 @@ app.get('/', (req, res) => {
 
 // Mount routers
 app.use('/api', routes);
-
-// Error handling middleware
-app.use(notFound);
-app.use(errorHandler);
-
-export default app;
