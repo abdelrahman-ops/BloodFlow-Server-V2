@@ -19,6 +19,9 @@ connectDB();
 
 // Create express app instance
 const app = express();
+app.on('error', (err) => {
+  console.error('Express error:', err);
+});
 
 // Get __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -46,6 +49,9 @@ app.use(morgan("dev"));
 // Basic routes
 app.get("/", (req, res) => res.send("Server is up and running"));
 app.get("/health", (req, res) => res.send("OK"));
+app.get('/test', (req, res) => {
+  res.json({ message: 'Test successful', timestamp: new Date() });
+});
 
 // API routes
 app.use('/api', routes);
@@ -63,5 +69,4 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
-    console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
 });
