@@ -1,89 +1,67 @@
 import express from 'express';
+import "dotenv/config";
+import cookieParser from "cookie-parser";
 import cors from 'cors';
-import morgan from 'morgan';
+import morgan from "morgan";
+
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+import { notFound, errorHandler } from './middlewares/error.js';
+import routes from './routes/index.js';
 import connectDB from './config/db.js';
-import dotenv from 'dotenv';
-import { errorHandler, notFound } from './middlewares/error.js';
 
-// Load env variables
-dotenv.config();
 
-// App init
+
+
+// Establish database connection
+connectDB();
+
+// Create express app instance
 const app = express();
 
-// Connect to database
-const initializeDB = async () => {
-  try {
-    await connectDB();
-    console.log('Database connected successfully');
-  } catch (err) {
-    console.error('Database connection error:', err);
-    process.exit(1);
-  }
-};
+// Get __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-// Middleware
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'https://blood-flow.vercel.app',
-    'https://blood-flow-server-v2.vercel.app',
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-}));
 
-app.use(express.json({ limit: '10kb' }));
+// Middleware setup
+app.use(
+    cors({ 
+        origin: [
+            'http://localhost:5173',
+            'https://blood-flow.vercel.app',
+            'https://blood-flow-server-v2.vercel.app'
+        ], 
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true,
+    })
+);
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(morgan("dev"));
 
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
+// Basic routes
+app.get("/", (req, res) => res.send("Server is up and running"));
+app.get("/health", (req, res) => res.send("OK"));
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-// Import and use routes AFTER middleware but BEFORE error handlers
-import routes from './routes/index.js';
+// API routes
 app.use('/api', routes);
 
-// Root route
-app.get('/', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head><title>BloodFlow API</title></head>
-      <body>
-        <h1>BloodFlow API</h1>
-        <p>API is running</p>
-      </body>
-    </html>
-  `);
-});
 
-// Error handlers (must be last)
+// Serve static files
+app.use('/images', express.static(join(__dirname, 'public/images')));
+app.use('/users', express.static(join(__dirname, 'public/users')));
+
+// Handle errors
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server
-const startServer = async () => {
-  await initializeDB();
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-};
+const PORT = process.env.PORT || 5000;
 
-// Start unless in test environment
-if (process.env.NODE_ENV !== 'test') {
-  startServer();
-}
-
-export default app;
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`API documentation available at http://localhost:${PORT}/api-docs`);
+});
