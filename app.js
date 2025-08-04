@@ -23,18 +23,35 @@ app.use(
         origin: [
             "http://localhost:5173",
             "http://localhost:5174",
-            "https://blood-flow.vercel.app"
+            "https://blood-flow.vercel.app",
+            "https://blood-flow-server-v2.vercel.app"
         ],
-        methods: ["GET", "POST", "PUT", "DELETE"],
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
         credentials: true,
     })
 );
+app.options('*', cors());
 app.use(express.json());
 
 // Dev logging middleware
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
+
+// Add this before your routes
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+  );
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH');
+    return res.status(200).json({});
+  }
+  next();
+});
 
 // Root route - Show API information
 app.get('/', (req, res) => {
