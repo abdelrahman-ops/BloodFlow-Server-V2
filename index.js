@@ -3,7 +3,6 @@ import 'dotenv/config';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import morgan from 'morgan';
-
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -18,28 +17,17 @@ const __dirname = dirname(__filename);
 // Create express app
 const app = express();
 
-// Connect to DB only once
-let isConnected = false;
-const connectOnce = async () => {
-  if (!isConnected) {
-    await connectDB();
-    isConnected = true;
-  }
-};
-
 // Middleware
-app.use(
-  cors({
-    origin: [
-      'http://localhost:5173',
-      'https://blood-flow.vercel.app',
-      'https://blood-flow-server-v2.vercel.app'
-    ],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-  })
-);
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://blood-flow.vercel.app',
+    'https://blood-flow-server-v2.vercel.app'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -54,7 +42,7 @@ app.get('/test', (req, res) => {
 
 app.use('/api', routes);
 
-// Static
+// Static files
 app.use('/images', express.static(join(__dirname, 'public/images')));
 app.use('/users', express.static(join(__dirname, 'public/users')));
 
@@ -62,8 +50,19 @@ app.use('/users', express.static(join(__dirname, 'public/users')));
 app.use(notFound);
 app.use(errorHandler);
 
-// 🧠 THIS IS THE FIX FOR VERCEL
-export default async function handler(req, res) {
-  await connectOnce(); // connect to DB before handling the request
-  app(req, res);        // let Express handle the request
-}
+// Vercel serverless function handler
+let dbConnected = false;
+const startServer = async () => {
+  if (!dbConnected) {
+    await connectDB();
+    dbConnected = true;
+  }
+  return app;
+};
+
+const handler = async (req, res) => {
+  const server = await startServer();
+  server(req, res);
+};
+
+export default handler;
