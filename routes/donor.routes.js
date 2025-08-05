@@ -1,16 +1,16 @@
 import express from 'express';
 import { addDonation, getDonorProfile, getDonors, getNearbyRequests, updateAvailability, updateHealthInfo } from '../controllers/donor.controller.js';
-import { protect } from '../middlewares/auth.js';
+
 
 
 const router = express.Router();
 
 router.get('/', getDonors);
-router.get('/profile', protect, getDonorProfile);
-router.put('/availability', protect, updateAvailability);
-router.get('/nearby-requests', protect, getNearbyRequests);
-router.post('/donate', protect , addDonation);
-router.put('/health-info', protect , updateHealthInfo);
+router.get('/profile',  getDonorProfile);
+router.put('/availability',  updateAvailability);
+router.get('/nearby-requests',  getNearbyRequests);
+router.post('/donate',  addDonation);
+router.put('/health-info',  updateHealthInfo);
 
 
 export default router;
