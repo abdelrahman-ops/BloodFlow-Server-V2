@@ -1,68 +1,65 @@
-import express from 'express';
-import 'dotenv/config';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import morgan from 'morgan';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import morgan from "morgan";
+import connectDB from "./config/db.js";
+import cookieParser from "cookie-parser";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
-import { notFound, errorHandler } from './middlewares/error.js';
-import routes from './routes/index.js';
-import connectDB from './config/db.js';
+// Import Routes
+import routes from "./routes/index.js";
 
-// Get __dirname for ES modules
+// Load environment variables
+dotenv.config();
+
+// Get the directory name for ES module support
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Create express app
+// Initialize Express app
 const app = express();
 
-// Middleware
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://blood-flow.vercel.app',
-    'https://blood-flow-server-v2.vercel.app'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(morgan('dev'));
+// Connect to MongoDB
+connectDB();
 
-// Routes
-app.get('/', (req, res) => res.send('Server is up and running'));
-app.get('/health', (req, res) => res.send('OK'));
-app.get('/test', (req, res) => {
-  res.json({ message: 'Test successful', timestamp: new Date() });
+// Middleware
+app.use(
+  cors({
+      origin: [
+          "http://localhost:5173",
+          "https://blood-flow.vercel.app"
+      ],
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      credentials: true,
+  })
+);
+app.use(express.json()); // Parse JSON request body
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
+app.use(morgan("dev")); // Logging
+app.use(cookieParser()); // Cookie parsing middleware
+
+// Serve static files for images
+app.use("/images", express.static(join(__dirname, "public/images")));
+app.use("/public/images", express.static("public/images"));
+
+// API Routes
+app.use("/api", routes);
+
+// Base Route
+app.get("/", (req, res) => {
+  res.send("Welcome to the Blood Donation Management System API!");
 });
 
-app.use('/api', routes);
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ success: false, error: "Internal Server Error" });
+});
 
-// Static files
-app.use('/images', express.static(join(__dirname, 'public/images')));
-app.use('/users', express.static(join(__dirname, 'public/users')));
+// Define the port and start the server
+const PORT = process.env.PORT || 5000;
 
-// Error handlers
-app.use(notFound);
-app.use(errorHandler);
-
-// Vercel serverless function handler
-let dbConnected = false;
-const startServer = async () => {
-  if (!dbConnected) {
-    await connectDB();
-    dbConnected = true;
-  }
-  return app;
-};
-
-const handler = async (req, res) => {
-  const server = await startServer();
-  server(req, res);
-};
-
-export default handler;
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
