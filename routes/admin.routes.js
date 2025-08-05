@@ -20,7 +20,7 @@ router.post('/events', createEvent);
 router.put('/events', updateEvent);
 router.delete('/events', deleteEvent);
 
-router.get('/admins', getAllAdmins);
+router.get('/admins',  getAllAdmins);
 router.post('/admins', createAdmin);
 
 
