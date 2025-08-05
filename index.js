@@ -35,6 +35,7 @@ app.use(
       credentials: true,
   })
 );
+app.options("*", cors());
 app.use(express.json()); // Parse JSON request body
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 app.use(morgan("dev")); // Logging

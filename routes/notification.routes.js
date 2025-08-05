@@ -4,13 +4,14 @@ import {
     markNotificationAsRead,
     getUnreadNotificationCount
 } from '../controllers/notification.controller.js';
+import { protect } from '../middlewares/auth.js';
 
 
 const router = express.Router();
 
 // Protected routes (require authentication)
-router.get('/', getUserNotifications);
-router.patch('/:notificationId/read', markNotificationAsRead);
-router.get('/unread-count', getUnreadNotificationCount);
+router.get('/', protect, getUserNotifications);
+router.patch('/:notificationId/read', protect, markNotificationAsRead);
+router.get('/unread-count', protect, getUnreadNotificationCount);
 
 export default router;
