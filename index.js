@@ -39,6 +39,9 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
 app.use(morgan("dev")); // Logging
 app.use(cookieParser()); // Cookie parsing middleware
 
+// Serve static files for images
+app.use("/images", express.static(join(__dirname, "public/images")));
+app.use("/public/images", express.static("public/images"));
 
 // API Routes
 app.use("/api", routes);

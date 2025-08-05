@@ -1,5 +1,4 @@
 import express from 'express';
-
 import { 
     changePassword,
     getMe, 
@@ -13,9 +12,9 @@ const router = express.Router();
 
 router.post('/register', register);
 router.post('/login', login);
-router.get('/me', getMe);
-router.put('/update-profile', updateProfile);
-router.put('/change-password', changePassword);
-router.put('/fcm-token', updateFcmToken);
+router.get('/me',  getMe);
+router.put('/update-profile',  updateProfile);
+router.put('/change-password',  changePassword);
+router.put('/fcm-token',  updateFcmToken);
 
 export default router;
